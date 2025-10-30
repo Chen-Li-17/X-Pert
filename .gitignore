@@ -163,7 +163,7 @@ outputs/
 *.pt
 *.pth
 *.ckpt
-models/
+# models/
 
 # Logs
 *.log
