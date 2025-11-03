@@ -9,9 +9,9 @@ sphinx:
   configuration: docs/source/conf.py
   fail_on_warning: false
 
-# python:
-#   install:
-#     - requirements: docs/requirements_pre.txt
+python:
+  install:
+    - requirements: docs/requirements_pre.txt
 
 # 可选：如需 PDF/EPUB 输出，取消注释 formats
 # formats:
