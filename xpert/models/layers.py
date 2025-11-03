@@ -21,8 +21,8 @@ except ImportError:
     warnings.warn("flash_attn is not installed")
     flash_attn_available = False
 
-from .dsbn import DomainSpecificBatchNorm1d
-from .grad_reverse import grad_reverse
+from xpert.external_model.scgpt.dsbn import DomainSpecificBatchNorm1d
+from xpert.external_model.scgpt.grad_reverse import grad_reverse
 
 
 class TransformerModel(nn.Module):

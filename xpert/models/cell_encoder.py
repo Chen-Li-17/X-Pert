@@ -19,7 +19,7 @@ import torch.nn.functional as F
 from einops import rearrange, repeat
 from einops_exts import rearrange_many, repeat_many
 
-from .model import (
+from .layers import (
     ExprDecoder,
     ZILNDecoder,
     BCE_MSE_Decoder,
@@ -31,10 +31,10 @@ from .model import (
     MLPDecoder,
     FiLM,
 )
-from ..utils import map_raw_id_to_vocab_id
+from xpert.external_model.scgpt.util import map_raw_id_to_vocab_id
 from .. import logger
 
-from .flamingo_func import GatedCrossAttentionBlock, PerceiverResampler, MLP, MLP_gene
+from .perturbation_perceiver import GatedCrossAttentionBlock, PerceiverResampler, MLP, MLP_gene, ModalityEncoder
 
 class TransformerGenerator(nn.Module):
     def __init__(
@@ -72,19 +72,18 @@ class TransformerGenerator(nn.Module):
         mask_mode = True,
         add_token = False,
         init_mode = False,
-
         dosage_mode_type = 0, # 0: direct multiply; 1: learnable vector
-
         decoder_type = 'mse',
-
         cross_mode = True,
-
         output_mode = 'scgpt', # scgpt; mlp
         feature_dim = None,
-
         cross_norm = False,
-
         film_mode = False,
+
+        gpt_emb_dim_gene = None,
+        gpt_emb_dim_drug = None,
+        co_train_mode = -1,
+        align_loss = None,
 
     ):
         super().__init__()
@@ -186,6 +185,8 @@ class TransformerGenerator(nn.Module):
         self.output_mode = output_mode
         self.cross_norm = cross_norm
         self.film_mode = film_mode
+        self.co_train_mode = co_train_mode
+        self.align_loss = align_loss
 
     
 
@@ -199,24 +200,26 @@ class TransformerGenerator(nn.Module):
                 d_model,
             )
 
-        if not cross_mode:
-            self.gene_mlp = MLP_gene([gpt_emb_dim, d_hid*2, d_hid], batch_norm=False, last_layer_act="linear")
+        if pert_mode != 'drug_gene':
+            if not cross_mode:
+                self.gene_mlp = MLP_gene([gpt_emb_dim, d_hid*2, d_hid], batch_norm=False, last_layer_act="linear")
+            self.drug_mlp = MLP([gpt_emb_dim, d_hid*2, d_hid], batch_norm=False, last_layer_act="linear")
 
-        if self.output_mode == 'mlp':
-            self.pert_decoder = MLPDecoder(d_hid, d_hid, d_hid, feature_dim, p_dropout=0.1)
+            if self.output_mode == 'mlp':
+                self.pert_decoder = MLPDecoder(d_hid, d_hid, d_hid, feature_dim, p_dropout=0.1)
+        else:
+            if self.co_train_mode == -1:
+                self.drug_mlp = MLP([gpt_emb_dim_drug, d_hid*2, d_hid], batch_norm=False, last_layer_act="linear")
+                self.gene_mlp = MLP([gpt_emb_dim_gene, d_hid*2, d_hid], batch_norm=False, last_layer_act="linear")
+            elif self.co_train_mode == 1:
+                self.drug_mlp = ModalityEncoder(gpt_emb_dim_drug, d_hid)
+                self.gene_mlp = ModalityEncoder(gpt_emb_dim_gene, d_hid)
 
-        # if drug_embed_mode == 'gpt':
-        #     self.drug_mlp = MLP([gpt_emb_dim, d_hid*2, d_hid], batch_norm=False, last_layer_act="linear")
-        # elif drug_embed_mode == 'grover':
-        #     self.drug_mlp = MLP([gpt_emb_dim, d_hid*2, d_hid], batch_norm=False, last_layer_act="linear")
-        # elif drug_embed_mode == 'rdkit':
-        #     self.drug_mlp = MLP([gpt_emb_dim, d_hid*2, d_hid], batch_norm=False, last_layer_act="linear")
-        # elif drug_embed_mode == 'morgan':
-        #     self.drug_mlp = MLP([gpt_emb_dim, d_hid*2, d_hid], batch_norm=False, last_layer_act="linear")
-        # else:
-        #     raise ValueError()
+                self.shared_proj = nn.Linear(d_hid, d_hid, bias=False)
+            else:
+                raise ValueError()
         
-        self.drug_mlp = MLP([gpt_emb_dim, d_hid*2, d_hid], batch_norm=False, last_layer_act="linear")
+        
         
         self.dose_vector = nn.Parameter(torch.randn(gpt_emb_dim, ))
 
@@ -327,6 +330,10 @@ class TransformerGenerator(nn.Module):
         batch_pert_embed: Tensor,
         pert_mask: Tensor,
         batch_dosages_pad = None,
+
+        batch_pert_embed_gene = None,
+        batch_pert_embed_drug = None,
+        drug_mask = None,
     ) -> Tensor:
         if not self.add_token:
             src = self.encoder(src)  # (batch, seq_len, embsize)
@@ -341,6 +348,8 @@ class TransformerGenerator(nn.Module):
         elif self.pert_mode == 'drug' and self.pert_flag_mode:
             perts = self.drug_pert_encoder(input_pert_flags)  # (batch, seq_len, embsize)
         elif self.pert_mode == 'drug' and not self.pert_flag_mode:
+            pass
+        elif self.pert_mode == 'drug_gene':
             pass
         else:
             raise ValueError()
@@ -390,6 +399,34 @@ class TransformerGenerator(nn.Module):
                         raise ValueError()
                 else:
                     batch_pert_embed = self.drug_mlp(batch_pert_embed)
+            elif self.pert_mode == 'drug_gene':
+                if batch_dosages_pad != None: # whether use the dosage info
+                    if self.dosage_mode_type == 0:
+                        batch_dosages_pad = batch_dosages_pad.unsqueeze(2) # (batch * pert num)->(batch * pert num * 1)
+                        batch_pert_embed_drug = self.drug_mlp(batch_pert_embed_drug * batch_dosages_pad) # batch_pert_embed: batch * pert num * embed dim
+                    elif self.dosage_mode_type == 1:
+                        batch_dosages_pad = batch_dosages_pad.unsqueeze(2) # (batch * pert num)->(batch * pert num * 1)
+                        dose_vec = repeat(self.dose_vector, 'd -> b p d', b=batch_dosages_pad.shape[0], p=batch_dosages_pad.shape[1])
+                        batch_pert_embed_drug = self.drug_mlp(batch_pert_embed_drug * (dose_vec*batch_dosages_pad)) # batch_pert_embed: batch * pert num * embed dim
+                    else:
+                        raise ValueError()
+                else:
+                    batch_pert_embed_drug = self.drug_mlp(batch_pert_embed_drug)
+
+                batch_pert_embed_gene = self.gene_mlp(batch_pert_embed_gene)
+
+                # print(len(drug_mask), values.shape, batch_pert_embed_drug.shape)
+
+                batch_pert_embed = torch.empty(values.shape[0], batch_pert_embed_gene.shape[-2], batch_pert_embed_gene.shape[-1], device=values.device, dtype=torch.float16)
+
+                if self.co_train_mode == -1:
+                    batch_pert_embed[drug_mask] = batch_pert_embed_drug
+                    batch_pert_embed[~drug_mask] = batch_pert_embed_gene
+                elif self.co_train_mode == 1:
+                    batch_pert_embed[drug_mask] = self.shared_proj(batch_pert_embed_drug)
+                    batch_pert_embed[~drug_mask] = self.shared_proj(batch_pert_embed_gene)
+                else:
+                    raise ValueError()
             else:
                 raise ValueError()
             
@@ -473,6 +510,11 @@ class TransformerGenerator(nn.Module):
         batch_pert_embed,
         pert_mask,
         batch_dosages_pad,
+
+        batch_pert_embed_gene,
+        batch_pert_embed_drug,
+        drug_mask,
+
         CLS: bool = False,
         CCE: bool = False,
         MVC: bool = False,
@@ -505,7 +547,10 @@ class TransformerGenerator(nn.Module):
 
 
             transformer_output = self._encode(
-                src, values, input_pert_flags, src_key_padding_mask, batch_pert_embed, pert_mask, batch_dosages_pad
+                src, values, input_pert_flags, src_key_padding_mask, batch_pert_embed, pert_mask, batch_dosages_pad,
+                batch_pert_embed_gene,
+                batch_pert_embed_drug,
+                drug_mask,
             )
             output = {}
             if self.decoder_type == 'mse' or self.decoder_type == 'balance_mse':
@@ -635,119 +680,6 @@ class TransformerGenerator(nn.Module):
             outputs.append(output)
         return torch.cat(outputs, dim=0)
 
-    def pred_perturb(
-        self,
-        batch_data,
-        include_zero_gene="batch-wise",
-        gene_ids=None,
-        amp=True,
-    ) -> Tensor:
-        """
-        Args:
-            batch_data: a dictionary of input data with keys.
-
-        Returns:
-            output Tensor of shape [N, seq_len]
-        """
-        self.eval()
-        device = next(self.parameters()).device
-        batch_data.to(device)
-        batch_size = len(batch_data.pert)
-        x: torch.Tensor = batch_data.x
-        ori_gene_values = x[:, 0].view(batch_size, -1)  # (batch_size, n_genes)
-        pert_flags = x[:, 1].long().view(batch_size, -1)
-
-        if include_zero_gene in ["all", "batch-wise"]:
-            assert gene_ids is not None
-            if include_zero_gene == "all":
-                input_gene_ids = torch.arange(ori_gene_values.size(1), device=device)
-            else:  # batch-wise
-                input_gene_ids = (
-                    ori_gene_values.nonzero()[:, 1].flatten().unique().sort()[0]
-                )
-            input_values = ori_gene_values[:, input_gene_ids]
-            input_pert_flags = pert_flags[:, input_gene_ids]
-
-            mapped_input_gene_ids = map_raw_id_to_vocab_id(input_gene_ids, gene_ids)
-            mapped_input_gene_ids = mapped_input_gene_ids.repeat(batch_size, 1)
-
-            src_key_padding_mask = torch.zeros_like(
-                input_values, dtype=torch.bool, device=device
-            )
-            with torch.cuda.amp.autocast(enabled=amp):
-                output_dict = self(
-                    mapped_input_gene_ids,
-                    input_values,
-                    input_pert_flags,
-                    src_key_padding_mask=src_key_padding_mask,
-                    CLS=False,
-                    CCE=False,
-                    MVC=False,
-                    ECS=False,
-                    do_sample=True,
-                )
-            output_values = output_dict["mlm_output"].float()
-            pred_gene_values = torch.zeros_like(ori_gene_values)
-            pred_gene_values[:, input_gene_ids] = output_values
-        return pred_gene_values
-    
-    def pred_perturb_new(
-        self,
-        batch_data,
-        include_zero_gene="batch-wise",
-        gene_ids=None,
-        amp=True,
-    ) -> Tensor:
-        """
-        Args:
-            batch_data: a dictionary of input data with keys.
-
-        Returns:
-            output Tensor of shape [N, seq_len]
-        """
-        self.eval()
-        device = next(self.parameters()).device
-        batch_data.to(device)
-        batch_size = len(batch_data.pert)
-        x: torch.Tensor = batch_data.x
-        # ori_gene_values = x[:, 0].view(batch_size, n_genes)
-        ori_gene_values = x
-        # pert_flags = x[:, 1].long().view(batch_size, n_genes)
-        pert_flags = batch_data.pert_flags.long()
-
-        if include_zero_gene in ["all", "batch-wise"]:
-            assert gene_ids is not None
-            if include_zero_gene == "all":
-                input_gene_ids = torch.arange(ori_gene_values.size(1), device=device)
-            else:  # batch-wise
-                input_gene_ids = (
-                    ori_gene_values.nonzero()[:, 1].flatten().unique().sort()[0]
-                )
-            input_values = ori_gene_values[:, input_gene_ids]
-            input_pert_flags = pert_flags[:, input_gene_ids]
-
-            mapped_input_gene_ids = map_raw_id_to_vocab_id(input_gene_ids, gene_ids)
-            mapped_input_gene_ids = mapped_input_gene_ids.repeat(batch_size, 1)
-
-            src_key_padding_mask = torch.zeros_like(
-                input_values, dtype=torch.bool, device=device
-            )
-            with torch.cuda.amp.autocast(enabled=amp):
-                output_dict = self(
-                    mapped_input_gene_ids,
-                    input_values,
-                    input_pert_flags,
-                    src_key_padding_mask=src_key_padding_mask,
-                    CLS=False,
-                    CCE=False,
-                    MVC=False,
-                    ECS=False,
-                    do_sample=True,
-                )
-            output_values = output_dict["mlm_output"].float()
-            pred_gene_values = torch.zeros_like(ori_gene_values)
-            pred_gene_values[:, input_gene_ids] = output_values
-        return pred_gene_values
 
 
 def generate_square_subsequent_mask(sz: int) -> Tensor:

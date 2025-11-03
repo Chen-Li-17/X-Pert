@@ -1,3 +1,9 @@
+.DS_Store
+examples/unseen_perturbation_prediction/NormanWeissman2019_filtered/
+examples/chemical_perturbation/L1000_phase1
+examples/perturbation_atlas_refactored/NormanWeissman2019_filtered/
+examples/cotrain_perturbation/L1000_phase1_cotrain
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

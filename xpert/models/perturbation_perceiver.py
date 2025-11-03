@@ -86,6 +86,20 @@ class MLP_gene(nn.Module):
     def forward(self, x):
         return self.network(x)
 
+class ModalityEncoder(nn.Module):
+    """MLP → ReLU → LayerNorm（每条路独立，维度一致）"""
+    def __init__(self, in_dim, hidden_dim, ln_eps=1e-5):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(in_dim, hidden_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(hidden_dim, hidden_dim),      # 可按需再加层
+            nn.ReLU(inplace=True),
+        )
+        self.ln = nn.LayerNorm(hidden_dim, eps=ln_eps)  # 独立 LN
+    def forward(self, x):
+        return self.ln(self.mlp(x))                      # shape: (B, hidden_dim)
+
 
 class PerceiverAttention(nn.Module):
     def __init__(
