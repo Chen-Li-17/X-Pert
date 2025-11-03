@@ -13,7 +13,7 @@ scipy==1.13.1
 seaborn==0.13.2
 setuptools==75.6.0
 sphinx_rtd_theme==3.0.2
-torch==1.12.1
+# torch==1.12.1
 tqdm==4.67.1
 umap_learn==0.5.7
 sphinx_autodoc_typehints
