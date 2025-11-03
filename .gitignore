@@ -157,7 +157,7 @@ Thumbs.db
 *.zarr
 *.csv
 *.tsv
-*.txt
+# *.txt
 data/
 results/
 outputs/
