@@ -1,8 +1,31 @@
 .DS_Store
-examples/unseen_perturbation_prediction/NormanWeissman2019_filtered/
+
+
+
+examples/genetic_perturbation/gears_data/
+examples/genetic_perturbation/NormanWeissman2019_filtered/
+examples/genetic_perturbation/scPerturb_scFlamingo_MultiPert_add-token.ipynb
+examples/genetic_perturbation/scPerturb_scFlamingo_MultiPert_add-token.py
+examples/genetic_perturbation/unseen_genetic_perturbation_prediction.ipynb
+
+
 examples/chemical_perturbation/L1000_phase1
-examples/perturbation_atlas_refactored/NormanWeissman2019_filtered/
-examples/cotrain_perturbation/L1000_phase1_cotrain
+
+
+examples/perturbverse_visualization/NormanWeissman2019_filtered/
+
+
+examples/cotrain_perturbation/L1000_phase1_cotrain/
+
+
+examples/create_perturbation_data/construct_dataloader.ipynb
+examples/create_perturbation_data/create_perturbation_data_K562.ipynb
+
+
+
+tests/
+tmp/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -182,7 +205,7 @@ temp/
 tmp/
 
 # Jupyter notebook outputs
-*.ipynb
+# *.ipynb
 
 # Pre-commit
 .pre-commit-config.yaml

@@ -1,118 +1,56 @@
 X-Pert Documentation
 ====================
 
-X-Pert is a Python package specifically designed for single-cell perturbation analysis, providing powerful tools to analyze the effects of gene perturbations on single-cell transcriptomes.
+X-Pert is a transformer-based framework that unifies genetic, chemical, and combinatorial perturbation modeling. It couples a **Perturbation Perceiver**—which embeds heterogeneous perturbations into a shared latent *Perturbverse*—with a **Cell Encoder** that fuses gene identity, expression, and perturbation-impact tokens. This architecture captures hierarchical gene–perturbation and gene–gene dependencies, enabling accurate predictions for unseen, dose/efficacy-aware, and combinatorial perturbations while supporting downstream analyses such as perturbation retrieval and drug–gene association discovery.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: User Guide
+.. figure:: ../assets/xpert_model_overview.jpg
+   :alt: X-Pert model overview
+   :align: center
+   :figwidth: 90%
 
-   installation
-   quickstart
-   tutorial
-   examples
+   X-Pert couples a Perturbation Perceiver with a Cell Encoder to model diverse perturbation responses.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: API Reference
+News
+----
 
-   api/analysis
-   api/models
-   api/data
-   api/visualization
-   api/utils
+* **2025-11-12** — X-Pert officially goes open source on GitHub, sharing the full in silico perturbation workflow with the community.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Developer Guide
+Key Capabilities
+----------------
 
-   contributing
-   development
-   changelog
+* **Unified Perturbation Space** – Align genetic and chemical perturbations in a shared latent representation for cross-type analysis and retrieval.
+* **Hierarchical Response Modeling** – Combine gated cross-attention and self-attention to respect perturbation-specific regulatory cascades and pathway programs.
+* **Dose & Efficacy Awareness** – Incorporate quantitative perturbation strength to improve predictions across variable dosage and sgRNA efficacy.
+* **Scalable Benchmarks** – Achieve strong performance across single-cell and bulk datasets, including unseen perturbations, combinations, and large-scale screens.
+* **Downstream Discovery** – Support perturbation retrieval, drug repurposing, and interpretable embedding analyses within the Perturbverse.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Other
+   :caption: Getting Started
 
-   license
-   authors
+   installation
+   quickstart
 
-Features
---------
+.. toctree::
+   :maxdepth: 1
+   :caption: Tutorial Notebooks
 
-* 🧬 **Single-cell Perturbation Modeling**: Support for multiple perturbation types and modeling methods
-* 📊 **Data Preprocessing**: Complete single-cell data preprocessing pipeline
-* 🔍 **Perturbation Effect Analysis**: Identify and analyze the effects of gene perturbations on cell states
-* 📈 **Visualization Tools**: Rich visualization capabilities for result presentation
-* ⚡ **High-Performance Computing**: Optimized algorithms for large-scale single-cell data
-* 🔧 **Modular Design**: Easy to extend and customize modular architecture
+   notebooks/create_genetic_data
+   notebooks/create_chemical_data
+   notebooks/create_cotrain_data
+   notebooks/train_genetic_model
+   notebooks/train_chemical_model
+   notebooks/visualize_perturbverse
 
-Quick Start
------------
+Resources
+---------
 
-.. code-block:: python
+* **Documentation** – Comprehensive guides and API references will be published at https://x-pert.readthedocs.io.
+* **License** – X-Pert is released under the MIT License. See the :download:`LICENSE <../../LICENSE>` file for details.
+* **Contact** – Project homepage: https://github.com/Chen-Li-17/X-Pert | Issue tracker: https://github.com/Chen-Li-17/X-Pert/issues | Correspondence: chen-li21@mails.tsinghua.edu.cn
 
-   import xpert as xp
-   import scanpy as sc
-
-   # Load single-cell data
-   adata = sc.read_h5ad("your_data.h5ad")
-
-   # Create perturbation analyzer
-   perturbator = xp.PerturbationAnalyzer(adata)
-
-   # Identify perturbed genes
-   perturbed_genes = perturbator.identify_perturbed_genes()
-
-   # Analyze perturbation effects
-   effects = perturbator.analyze_perturbation_effects()
-
-   # Visualize results
-   perturbator.plot_perturbation_heatmap()
-
-Installation
-------------
-
-.. code-block:: bash
-
-   pip install x-pert
-
-Or install from source:
-
-.. code-block:: bash
-
-   git clone https://github.com/yourusername/X-Pert.git
-   cd X-Pert
-   pip install -e .
-
-Citation
---------
-
-If you use X-Pert in your research, please cite our paper:
-
-.. code-block:: bibtex
-
-   @article{xpert2024,
-     title={X-Pert: A Comprehensive Framework for Single Cell Perturbation Analysis},
-     author={Your Name and Collaborators},
-     journal={Nature Methods},
-     year={2024}
-   }
-
-License
--------
-
-This project is licensed under the MIT License - see :doc:`license` for details.
-
-Contact
--------
-
-* Project Homepage: https://github.com/yourusername/X-Pert
-* Issue Tracker: https://github.com/yourusername/X-Pert/issues
-* Email: your.email@example.com
-
-Indices and tables
-==================
+Indices and Tables
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
