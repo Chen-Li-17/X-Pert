@@ -35,12 +35,12 @@ Key Capabilities
    :maxdepth: 1
    :caption: Tutorial Notebooks
 
-   notebooks/create_genetic_data
-   notebooks/create_chemical_data
-   notebooks/create_cotrain_data
-   notebooks/train_genetic_model
-   notebooks/train_chemical_model
-   notebooks/visualize_perturbverse
+   tutorials/1_genetic_perturbation_data
+   tutorials/2_chemical_perturbation_data
+   tutorials/3_cotrain_perturbation_data
+   tutorials/1_X-Pert_genetic_perturbation
+   tutorials/1_X-Pert_chemical_perturbation
+   tutorials/plot_perturbverse
 
 Resources
 ---------

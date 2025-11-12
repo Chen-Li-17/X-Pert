@@ -107,6 +107,16 @@ napoleon_attr_annotations = True
 nbsphinx_execute = 'never'  # Don't execute notebooks during build
 nbsphinx_allow_errors = True
 nbsphinx_timeout = 60
+nbsphinx_prolog = """
+.. raw:: html
+
+    <style>
+        .nbinput .prompt,
+        .nboutput .prompt {
+            display: none;
+        }
+    </style>
+"""
 
 # -- Options for MyST extension ----------------------------------------------
 

@@ -13,18 +13,18 @@ Workflow Overview
 
 2. **Construct Perturbation Datasets**
 
-   * :doc:`Genetic perturbation preprocessing <notebooks/create_genetic_data>`
-   * :doc:`Chemical perturbation preprocessing <notebooks/create_chemical_data>`
-   * :doc:`Joint (co-train) perturbation preprocessing <notebooks/create_cotrain_data>`
+   * :doc:`Genetic perturbation preprocessing <tutorials/1_genetic_perturbation_data>`
+   * :doc:`Chemical perturbation preprocessing <tutorials/2_chemical_perturbation_data>`
+   * :doc:`Joint (co-train) perturbation preprocessing <tutorials/3_cotrain_perturbation_data>`
 
 3. **Train Perturbation Models**
 
-   * :doc:`Train X-Pert on genetic perturbations <notebooks/train_genetic_model>`
-   * :doc:`Train X-Pert on chemical perturbations <notebooks/train_chemical_model>`
+   * :doc:`Train X-Pert on genetic perturbations <tutorials/1_X-Pert_genetic_perturbation>`
+   * :doc:`Train X-Pert on chemical perturbations <tutorials/1_X-Pert_chemical_perturbation>`
 
 4. **Explore the Perturbverse**
 
-   * :doc:`Visualize latent perturbation embeddings <notebooks/visualize_perturbverse>`
+   * :doc:`Visualize latent perturbation embeddings <tutorials/plot_perturbverse>`
 
 Minimal Python Check
 --------------------
