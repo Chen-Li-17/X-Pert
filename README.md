@@ -46,6 +46,14 @@ conda env create -f environment.yml
 conda activate xpert
 ```
 
+## Data sources
+
+Tutorial notebooks expect different prepared datasets under your local data root (for example `data/`). These archives are **stored on [Figshare](https://figshare.com)**; open each link to reach the DOI landing page and download the files you need.
+
+- **Genetic perturbation** (`examples/create_perturbation_data/1_genetic_perturbation_data.ipynb`, `examples/genetic_perturbation/1_X-Pert_genetic_perturbation.ipynb`): [scGPT_human on Figshare](https://doi.org/10.6084/m9.figshare.32221191), [Norman2019 on Figshare](https://doi.org/10.6084/m9.figshare.32221275).
+- **Drug (chemical) perturbation** (`examples/create_perturbation_data/2_chemical_perturbation_data.ipynb`, `examples/chemical_perturbation/1_X-Pert_chemical_perturbation.ipynb`): [L1000_phase1 on Figshare](https://doi.org/10.6084/m9.figshare.32221302).
+- **Joint (cotrain) training** (`examples/create_perturbation_data/3_cotrain_perturbation_data.ipynb`, `examples/cotrain_perturbation/1_X-Pert_cotrain_perturbation.ipynb`): [L1000_phase1_cotrain on Figshare](https://doi.org/10.6084/m9.figshare.32221386).
+
 ## 📚 Tutorials
 
 Leverage the Jupyter notebooks under `examples/` to reproduce the workflows presented in the manuscript.
@@ -58,6 +66,8 @@ Leverage the Jupyter notebooks under `examples/` to reproduce the workflows pres
   - `examples/genetic_perturbation/1_X-Pert_genetic_perturbation.ipynb`
 - **Train X-Pert on chemical perturbations**
   - `examples/chemical_perturbation/1_X-Pert_chemical_perturbation.ipynb`
+- **Joint training (genetic + chemical cotrain)**
+  - `examples/cotrain_perturbation/1_X-Pert_cotrain_perturbation.ipynb`
 - **Visualize the Perturbverse**
   - `examples/perturbverse_visualization/plot_perturbverse.ipynb`
 

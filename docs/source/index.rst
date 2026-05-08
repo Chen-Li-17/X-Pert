@@ -40,6 +40,7 @@ Key Capabilities
    tutorials/3_cotrain_perturbation_data
    tutorials/1_X-Pert_genetic_perturbation
    tutorials/1_X-Pert_chemical_perturbation
+   tutorials/1_X-Pert_cotrain_perturbation
    tutorials/plot_perturbverse
 
 Resources
