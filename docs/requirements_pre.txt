@@ -22,3 +22,4 @@ nbsphinx
 sphinx_rtd_theme
 Cython
 myst_parser
+ipython
