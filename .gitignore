@@ -25,6 +25,7 @@ examples/create_perturbation_data/create_perturbation_data_K562.ipynb
 
 tests/
 tmp/
+scripts/
 
 
 # Byte-compiled / optimized / DLL files
@@ -181,7 +182,7 @@ Thumbs.db
 *.csv
 *.tsv
 # *.txt
-data/
+/data/
 results/
 outputs/
 

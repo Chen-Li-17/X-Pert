@@ -511,9 +511,9 @@ class TransformerGenerator(nn.Module):
         pert_mask,
         batch_dosages_pad,
 
-        batch_pert_embed_gene,
-        batch_pert_embed_drug,
-        drug_mask,
+        batch_pert_embed_gene = None,
+        batch_pert_embed_drug = None,
+        drug_mask = None,
 
         CLS: bool = False,
         CCE: bool = False,
